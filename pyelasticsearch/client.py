@@ -398,8 +398,19 @@ class ElasticSearch(object):
         .. _`ES's get API`:
             http://www.elasticsearch.org/guide/reference/api/get.html
         """
-        return self._send_request('GET', [index, doc_type, id],
-                                  query_params=query_params)
+        mget = False
+        if not isinstance(id, basestring):
+            try:
+                iter(id)
+                mget = True
+            except TypeError:
+                pass
+
+        return self._send_request('GET',
+            [index, doc_type, '_mget' if mget else id],
+            {"ids": list(id)} if mget else '',
+            query_params=query_params
+        )
 
     def _search_or_count(self, kind, query, index=None, doc_type=None,
                          query_params=None):
